@@ -15,10 +15,52 @@ public class Program
     // This example shows how to use the NAudio library to convert an mp3 file to a wav file with 16Khz sample rate and then use the Whisper library to process the wav file.
     public static async Task Main(string[] args)
     {
+
+        //Setar variaveis
+        string modelo = "tiny"; //tiny, base, small, medium, largev1, largev2, largev3
+        var mp3FileName = "C:\\Whisper\\audio.wav"; //path do arquivo
+        string pathDestino = "C:\\Whisper"; //pasta destino
+        string nomeArquivo = "teste.txt"; //nome da transcricao
+
+
+        GgmlType ggmlType = GgmlType.LargeV1;
+        string modelFileName = "";
+        switch (modelo)
+        {
+            case "tiny":
+                ggmlType = GgmlType.Tiny;
+                modelFileName = "ggml-tiny.bin";
+                break;
+            case "base":
+                ggmlType = GgmlType.Base;
+                modelFileName = "ggml-base.bin";
+                break;
+            case "small":
+                ggmlType = GgmlType.Small;
+                modelFileName = "ggml-small.bin";
+                break;
+            case "medium":
+                ggmlType = GgmlType.Medium;
+                modelFileName = "ggml-medium.bin";
+                break;
+            case "largev1":
+                ggmlType = GgmlType.LargeV1;
+                modelFileName = "ggml-largev1.bin";
+                break;
+            case "largev2":
+                ggmlType = GgmlType.LargeV2;
+                modelFileName = "ggml-largev2.bin";
+                break;
+            case "largev3":
+                ggmlType = GgmlType.LargeV3;
+                modelFileName = "ggml-largev3.bin";
+                break;
+
+        }
         // We declare three variables which we will use later, ggmlType, modelFileName and mp3FileName
-        var ggmlType = GgmlType.LargeV2;
-        var modelFileName = "ggml-largev2.bin";
-        var mp3FileName = "C:\\Whisper\\video.mp4";
+        //var ggmlType = GgmlType.LargeV2;
+        //var modelFileName = "ggml-largev2.bin";
+        //var mp3FileName = "C:\\Whisper\\video.mp4";
 
         // This section detects whether the "ggml-base.bin" file exists in our project disk. If it doesn't, it downloads it from the internet
         if (!File.Exists(modelFileName))
@@ -27,7 +69,7 @@ public class Program
         }
 
         // This section creates the whisperFactory object which is used to create the processor object.
-        using var whisperFactory = WhisperFactory.FromPath("ggml-largev2.bin");
+        using var whisperFactory = WhisperFactory.FromPath(modelFileName);
 
         // This section creates the processor object which is used to process the audio file, it uses language `auto` to detect the language of the audio file.
         using var processor = whisperFactory.CreateBuilder()
@@ -76,7 +118,7 @@ public class Program
             Console.WriteLine($"{result.Start}->{result.End}: {result.Text}");
         }
         */
-        using (StreamWriter outputFile = new StreamWriter(Path.Combine("C:\\Whisper", "WriteLines2.txt")))
+        using (StreamWriter outputFile = new StreamWriter(Path.Combine(pathDestino, nomeArquivo)))
         {
             await foreach (var result in processor.ProcessAsync(wavStream))
             {
