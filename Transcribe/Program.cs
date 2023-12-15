@@ -18,7 +18,7 @@ public class Program
 
         //Setar variaveis
         string modelo = "tiny"; //tiny, base, small, medium, largev1, largev2, largev3
-        var mp3FileName = "C:\\Whisper\\audio.wav"; //path do arquivo
+        var mp3FileName = "C:\\Whisper\\video2.mkv"; //path do arquivo
         string pathDestino = "C:\\Whisper"; //pasta destino
         string nomeArquivo = "teste.txt"; //nome da transcricao
 
@@ -100,7 +100,7 @@ public class Program
             // This section sets the wavStream to the beginning of the stream. (This is required because the wavStream was written to in the previous section)
             wavStream.Seek(0, SeekOrigin.Begin);
         }
-        if (mp3FileName.Contains(".mp4")) 
+        if (mp3FileName.Contains(".mp4") || mp3FileName.Contains(".mkv")) 
         {
             
             using var reader = new MediaFoundationReader(mp3FileName);
