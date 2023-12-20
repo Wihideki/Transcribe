@@ -9,18 +9,108 @@ using System.IO;
 using NAudio.MediaFoundation;
 using Whisper.net;
 using Whisper.net.Ggml;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Runtime.CompilerServices;
 
 public class Program
 {
-    // This example shows how to use the NAudio library to convert an mp3 file to a wav file with 16Khz sample rate and then use the Whisper library to process the wav file.
-    public static async Task Main(string[] args)
-    {
+    private static string _modelo = "largev3"; //tiny, base, small, medium, largev1, largev2, largev3
+    private static string _path = "C:\\Whisper"; //Caminho da pasta monitada
 
+    public static string Modelo { get { return _modelo; } set { _modelo = value; } }
+    public static string Monitorar { get { return _path; } private set { } }
+    public static void Main(string[] args)
+    {
+        //string monitorar = "C:\\Whisper";
+        using var watcher = new FileSystemWatcher(Monitorar);
+        watcher.Filter = "*.wav";
+        watcher.NotifyFilter = NotifyFilters.Attributes
+                                 | NotifyFilters.CreationTime
+                                 | NotifyFilters.DirectoryName
+                                 | NotifyFilters.FileName
+                                 | NotifyFilters.LastAccess
+                                 | NotifyFilters.LastWrite
+                                 | NotifyFilters.Security
+                                 | NotifyFilters.Size;
+        watcher.IncludeSubdirectories = true;
+        watcher.Created += OnCreated;
+        //watcher.Changed += OnCreated;
+        watcher.EnableRaisingEvents = true;
+        using var watcher2 = new FileSystemWatcher(Monitorar);
+        watcher2.Filter = "*.mp3";
+        watcher2.NotifyFilter = NotifyFilters.Attributes
+                                 | NotifyFilters.CreationTime
+                                 | NotifyFilters.DirectoryName
+                                 | NotifyFilters.FileName
+                                 | NotifyFilters.LastAccess
+                                 | NotifyFilters.LastWrite
+                                 | NotifyFilters.Security
+                                 | NotifyFilters.Size;
+        watcher2.IncludeSubdirectories = true;
+        watcher2.Created += OnCreated;
+        //watcher2.Changed += OnCreated;
+        watcher2.EnableRaisingEvents = true;
+        using var watcher3 = new FileSystemWatcher(Monitorar);
+        watcher3.Filter = "*.mp4";
+        watcher3.NotifyFilter = NotifyFilters.Attributes
+                                 | NotifyFilters.CreationTime
+                                 | NotifyFilters.DirectoryName
+                                 | NotifyFilters.FileName
+                                 | NotifyFilters.LastAccess
+                                 | NotifyFilters.LastWrite
+                                 | NotifyFilters.Security
+                                 | NotifyFilters.Size;
+        watcher3.IncludeSubdirectories = true;
+        watcher3.Created += OnCreated;
+        //watcher3.Changed += OnCreated;
+        watcher3.EnableRaisingEvents = true;
+        using var watcher4 = new FileSystemWatcher(Monitorar);
+        watcher4.Filter = "*.mkv";
+        watcher4.NotifyFilter = NotifyFilters.Attributes
+                                 | NotifyFilters.CreationTime
+                                 | NotifyFilters.DirectoryName
+                                 | NotifyFilters.FileName
+                                 | NotifyFilters.LastAccess
+                                 | NotifyFilters.LastWrite
+                                 | NotifyFilters.Security
+                                 | NotifyFilters.Size;
+        watcher4.IncludeSubdirectories = true;
+        watcher4.Created += OnCreated;
+        //watcher4.Changed += OnCreated;
+        watcher4.EnableRaisingEvents = true;
+
+        while (true) 
+        {
+            Console.WriteLine($"Monitorando a pasta {Monitorar} com o modelo {Modelo}.");
+            Console.WriteLine($"Digite 1 para mudar o modelo, digite 0 para parar e sair: ");
+            string? digito = Console.ReadLine();
+            if (digito == "0") break;
+            else if (digito == "1")
+            {
+                Console.WriteLine("Digite o modelo (tiny, base, small, medium, largev1, largev2 ou largev3): ");
+                string? altModel = Console.ReadLine();
+                Modelo = altModel;
+                Console.WriteLine("Modelo alterado\n");
+            }
+            else
+                Console.WriteLine("Não entendi, tente novamente.");
+        }
+        
+    }
+
+    private static async void OnCreated(object sender, FileSystemEventArgs e)
+    {
+        await MainAsync(sender, e);
+    }
+    // This example shows how to use the NAudio library to convert an mp3 file to a wav file with 16Khz sample rate and then use the Whisper library to process the wav file.
+    private static async Task MainAsync(object sender, FileSystemEventArgs e)
+    {
+        Console.WriteLine($"Iniciando a transcrição do arquivo {e.FullPath}");
         //Setar variaveis
-        string modelo = "tiny"; //tiny, base, small, medium, largev1, largev2, largev3
-        var mp3FileName = "C:\\Whisper\\video2.mkv"; //path do arquivo
-        string pathDestino = "C:\\Whisper"; //pasta destino
-        string nomeArquivo = "teste.txt"; //nome da transcricao
+        string modelo = Modelo;
+        var mp3FileName = e.FullPath; //path do arquivo
+        string pathDestino = e.FullPath.Replace("\\"+e.Name,""); //pasta destino
+        string nomeArquivo = e.Name+"_transc.txt"; //nome da transcricao
 
 
         GgmlType ggmlType = GgmlType.LargeV1;
@@ -73,7 +163,7 @@ public class Program
 
         // This section creates the processor object which is used to process the audio file, it uses language `auto` to detect the language of the audio file.
         using var processor = whisperFactory.CreateBuilder()
-            .WithLanguage("auto")
+            .WithLanguage("pt").WithEntropyThreshold(3.2f).WithTemperature(0.5f)
             .Build();
 
         // This section opens the mp3 file and converts it to a wav file with 16Khz sample rate.
@@ -86,7 +176,7 @@ public class Program
             using var reader = new Mp3FileReader(fileStream);
             var resampler = new WdlResamplingSampleProvider(reader.ToSampleProvider(), 16000);
             WaveFileWriter.WriteWavFileToStream(wavStream, resampler.ToWaveProvider16());
-
+            
             // This section sets the wavStream to the beginning of the stream. (This is required because the wavStream was written to in the previous section)
             wavStream.Seek(0, SeekOrigin.Begin);
         }
@@ -135,5 +225,7 @@ public class Program
         using var fileWriter = File.OpenWrite(fileName);
         await modelStream.CopyToAsync(fileWriter);
     }
+
+
 }
 
